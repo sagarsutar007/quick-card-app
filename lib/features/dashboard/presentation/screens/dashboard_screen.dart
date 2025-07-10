@@ -50,121 +50,127 @@ class DashboardScreen extends StatelessWidget {
               return Center(child: Text("Error: ${state.message}"));
             } else if (state is DashboardLoaded) {
               final dashboard = state.dashboard;
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FutureBuilder<UserInfo?>(
-                      future: UserService.getUser(),
-                      builder: (context, snapshot) {
-                        final user = snapshot.data;
+              return RefreshIndicator(
+                onRefresh: () async {
+                  context.read<DashboardBloc>().add(LoadDashboard());
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FutureBuilder<UserInfo?>(
+                        future: UserService.getUser(),
+                        builder: (context, snapshot) {
+                          final user = snapshot.data;
 
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _getGreetingMessage(),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey,
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _getGreetingMessage(),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  user?.name ?? 'Guest',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    user?.name ?? 'Guest',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundImage: user?.profileImage != null
-                                  ? CachedNetworkImageProvider(
-                                      user!.profileImage!,
-                                    )
-                                  : const AssetImage('assets/images/user.jpg')
-                                        as ImageProvider,
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    _buildSchoolBanners(dashboard.schoolBasicInfo),
-                    const SizedBox(height: 20),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 1,
-                      children: [
-                        _buildStatCard(
-                          "Schools",
-                          dashboard.schoolCount,
-                          [Color(0xFF1C5858), Color(0xFF3BAEA0)],
-                          () {
-                            context.push('/schools');
-                          },
-                        ),
-                        _buildStatCard(
-                          "Students",
-                          dashboard.studentCount,
-                          [Color(0xFFF69000), Color(0xFFFFA947)],
-                          () {
-                            context.push('/students');
-                          },
-                        ),
-                        _buildStatCard(
-                          "With Photo",
-                          dashboard.studentsWithPhoto,
-                          [Color(0xFF01619E), Color(0xFF00B4DB)],
-                          () {
-                            context.push('/students?with_photo=true');
-                          },
-                        ),
-                        _buildStatCard(
-                          "Without Photo",
-                          dashboard.studentsWithoutPhoto,
-                          [Color(0xFFFF416C), Color(0xFFFF4B2B)],
-                          () {
-                            context.push('/students?with_photo=false');
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "Latest Activities",
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 10),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: dashboard.latestActivities.length,
-                      itemBuilder: (context, index) {
-                        final activity = dashboard.latestActivities[index];
-                        return ListTile(
-                          leading: const Icon(Icons.history),
-                          title: Text(
-                            "${activity.action} - ${activity.description}",
+                                ],
+                              ),
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundImage: user?.profileImage != null
+                                    ? CachedNetworkImageProvider(
+                                        user!.profileImage!,
+                                      )
+                                    : const AssetImage('assets/images/user.jpg')
+                                          as ImageProvider,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      _buildSchoolBanners(dashboard.schoolBasicInfo),
+                      const SizedBox(height: 20),
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 1,
+                        children: [
+                          _buildStatCard(
+                            "Schools",
+                            dashboard.schoolCount,
+                            [Color(0xFF1C5858), Color(0xFF3BAEA0)],
+                            () {
+                              context.push('/schools');
+                            },
                           ),
-                          subtitle: Text(
-                            "IP: ${activity.ipAddress} | ${DateFormat.yMMMd().add_jm().format(activity.createdAt)}",
+                          _buildStatCard(
+                            "Students",
+                            dashboard.studentCount,
+                            [Color(0xFFF69000), Color(0xFFFFA947)],
+                            () {
+                              context.push('/students');
+                            },
                           ),
-                        );
-                      },
-                    ),
-                  ],
+                          _buildStatCard(
+                            "With Photo",
+                            dashboard.studentsWithPhoto,
+                            [Color(0xFF01619E), Color(0xFF00B4DB)],
+                            () {
+                              context.push('/students?with_photo=true');
+                            },
+                          ),
+                          _buildStatCard(
+                            "Without Photo",
+                            dashboard.studentsWithoutPhoto,
+                            [Color(0xFFFF416C), Color(0xFFFF4B2B)],
+                            () {
+                              context.push('/students?with_photo=false');
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Latest Activities",
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 10),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: dashboard.latestActivities.length,
+                        itemBuilder: (context, index) {
+                          final activity = dashboard.latestActivities[index];
+                          return ListTile(
+                            leading: const Icon(Icons.history),
+                            title: Text(
+                              "${activity.action} - ${activity.description}",
+                            ),
+                            subtitle: Text(
+                              "IP: ${activity.ipAddress} | ${DateFormat.yMMMd().add_jm().format(activity.createdAt)}",
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
