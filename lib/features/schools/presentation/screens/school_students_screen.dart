@@ -14,6 +14,7 @@ import 'package:quickcard/features/schools/domain/usecases/remove_student_photo.
 import 'package:quickcard/features/schools/domain/usecases/upload_student_photo.dart';
 import 'package:quickcard/features/schools/presentation/bloc/photo/photo_bloc.dart';
 import 'package:quickcard/features/schools/presentation/bloc/photo/photo_event.dart';
+import 'package:quickcard/features/schools/presentation/bloc/photo/photo_state.dart';
 import 'package:quickcard/features/schools/presentation/bloc/student_bloc.dart';
 import 'package:quickcard/features/schools/presentation/bloc/student_event.dart';
 import 'package:quickcard/features/schools/presentation/bloc/student_state.dart';
@@ -464,95 +465,106 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (modalContext) {
-      return BlocProvider.value(
-        value: context.read<PhotoBloc>(),
-        child: DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.5,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          builder: (context, scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Student Details",
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.grey.shade200,
-                    child: student.photo != null && student.photo!.isNotEmpty
-                        ? ClipOval(
-                            child: CachedNetworkImage(
-                              imageUrl: _resolvePhotoUrl(student.photo),
-                              useOldImageOnUrlChange: false,
-                              cacheManager: CacheManager(
-                                Config(
-                                  'noCache',
-                                  stalePeriod: Duration.zero,
-                                  maxNrOfCacheObjects: 0,
-                                ),
-                              ),
-                              fit: BoxFit.cover,
-                              width: 100,
-                              height: 100,
-                              placeholder: (context, url) =>
-                                  const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                              errorWidget: (context, url, error) {
-                                return const Icon(Icons.person, size: 50);
-                              },
-                            ),
-                          )
-                        : const Icon(Icons.person, size: 40),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    student.name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Class: ${student.className ?? "-"}'),
-                          const SizedBox(width: 8),
-                          const Text('•'),
-                          const SizedBox(width: 8),
-                          Text('DOB: ${_formatDob(student.dob)}'),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Last Updated: ${_formatDateTime(student.updatedAt)}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 35),
+      return BlocProvider(
+        create: (_) => getIt<PhotoBloc>(),
+        child: BlocListener<PhotoBloc, PhotoState>(
+          listener: (context, photoState) {
+            if (photoState is PhotoUploadSuccess ||
+                photoState is PhotoRemoveSuccess) {
+              bloc.add(
+                LoadStudents(student.schoolId, status: state.currentStatus),
+              );
 
-                  if (canUpload)
-                    Center(
-                      child: SizedBox(
+              if (Navigator.canPop(modalContext)) {
+                Navigator.pop(modalContext);
+              }
+            }
+          },
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.5,
+            minChildSize: 0.4,
+            maxChildSize: 0.9,
+            builder: (context, scrollController) {
+              return SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Student Details",
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey.shade200,
+                      child: student.photo != null && student.photo!.isNotEmpty
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: _resolvePhotoUrl(student.photo),
+                                useOldImageOnUrlChange: false,
+                                cacheManager: CacheManager(
+                                  Config(
+                                    'noCache',
+                                    stalePeriod: Duration.zero,
+                                    maxNrOfCacheObjects: 0,
+                                  ),
+                                ),
+                                fit: BoxFit.cover,
+                                width: 100,
+                                height: 100,
+                                placeholder: (context, url) =>
+                                    const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.person, size: 50),
+                              ),
+                            )
+                          : const Icon(Icons.person, size: 40),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      student.name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Class: ${student.className ?? "-"}'),
+                            const SizedBox(width: 8),
+                            const Text('•'),
+                            const SizedBox(width: 8),
+                            Text('DOB: ${_formatDob(student.dob)}'),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Last Updated: ${_formatDateTime(student.updatedAt)}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 35),
+
+                    if (canUpload)
+                      SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.upload),
@@ -574,10 +586,6 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
                                 );
                               }
                             }
-
-                            Navigator.pop(
-                              context,
-                            ); // ✅ Only pop after work done
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.deepOrange,
@@ -589,14 +597,13 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
                           ),
                         ),
                       ),
-                    ),
-                  const SizedBox(height: 8),
 
-                  if (canRemove &&
-                      student.photo != null &&
-                      student.photo!.isNotEmpty)
-                    Center(
-                      child: SizedBox(
+                    const SizedBox(height: 8),
+
+                    if (canRemove &&
+                        student.photo != null &&
+                        student.photo!.isNotEmpty)
+                      SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.delete),
@@ -605,9 +612,6 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
                             context.read<PhotoBloc>().add(
                               RemovePhotoRequested(student.id.toString()),
                             );
-                            Navigator.pop(
-                              context,
-                            ); // Optional: close after deletion
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
@@ -621,11 +625,11 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       );
     },

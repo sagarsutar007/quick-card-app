@@ -11,6 +11,7 @@ import 'package:quickcard/features/schools/data/repositories/student_repository_
 import 'package:quickcard/features/schools/domain/usecases/upload_student_photo.dart';
 import 'package:quickcard/features/schools/domain/usecases/remove_student_photo.dart';
 import 'package:quickcard/features/schools/data/usecases/upload_student_photo_impl.dart';
+import 'package:quickcard/features/schools/presentation/bloc/photo/photo_bloc.dart';
 
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -110,6 +111,14 @@ Future<void> setupLocator() async {
 
   getIt.registerLazySingleton<RemoveStudentPhoto>(
     () => RemoveStudentPhotoImpl(getIt<StudentRepository>()),
+  );
+
+  // Register PhotoBloc
+  getIt.registerFactory<PhotoBloc>(
+    () => PhotoBloc(
+      uploadStudentPhoto: getIt<UploadStudentPhoto>(),
+      removeStudentPhoto: getIt<RemoveStudentPhoto>(),
+    ),
   );
 
   // Wait for all async singletons to be ready
