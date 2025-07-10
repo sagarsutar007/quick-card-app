@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:quickcard/features/schools/data/models/authority_request_model.dart';
 import 'package:quickcard/features/schools/data/models/school_model.dart';
 import 'package:quickcard/features/schools/domain/repositories/school_repository.dart';
 
@@ -24,5 +25,17 @@ class SchoolRepositoryImpl implements SchoolRepository {
     final data = response.data['schools'] as List;
 
     return data.map((json) => SchoolModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<void> addAuthority(int schoolId, AuthorityRequestModel model) async {
+    final response = await dio.post(
+      '/schools/$schoolId/authority',
+      data: model.toJson(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(response.data['message'] ?? 'Failed to add authority');
+    }
   }
 }

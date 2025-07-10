@@ -146,9 +146,9 @@ class SchoolStudentsScreen extends StatelessWidget {
                         labelColor: Colors.white,
                         unselectedLabelColor: Colors.white70,
                         tabs: [
-                          Tab(text: "All"),
-                          Tab(text: "Uploaded"),
                           Tab(text: "Missing"),
+                          Tab(text: "Uploaded"),
+                          Tab(text: "All"),
                         ],
                       ),
                     ],
@@ -159,8 +159,10 @@ class SchoolStudentsScreen extends StatelessWidget {
                 children: [
                   _StudentListView(
                     schoolId: schoolId,
-                    onTabActive: () =>
-                        context.read<StudentBloc>().add(LoadStudents(schoolId)),
+                    status: 'missing',
+                    onTabActive: () => context.read<StudentBloc>().add(
+                      LoadStudents(schoolId, status: 'not uploaded'),
+                    ),
                   ),
                   _StudentListView(
                     schoolId: schoolId,
@@ -171,10 +173,8 @@ class SchoolStudentsScreen extends StatelessWidget {
                   ),
                   _StudentListView(
                     schoolId: schoolId,
-                    status: 'missing',
-                    onTabActive: () => context.read<StudentBloc>().add(
-                      LoadStudents(schoolId, status: 'not uploaded'),
-                    ),
+                    onTabActive: () =>
+                        context.read<StudentBloc>().add(LoadStudents(schoolId)),
                   ),
                 ],
               ),

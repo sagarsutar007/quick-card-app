@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.deepOrange,
-          foregroundColor: Colors.white, // text/icon color
+          foregroundColor: Colors.white,
           elevation: 4,
         ),
       ),

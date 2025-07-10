@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:quickcard/core/services/locator.dart';
 import 'package:quickcard/shared/widgets/labeled_text_field.dart';
+import 'package:quickcard/features/schools/domain/repositories/school_repository.dart';
+import 'package:quickcard/features/schools/data/models/authority_request_model.dart';
 
 class AddAuthorityScreen extends StatefulWidget {
   final int schoolId;
@@ -24,14 +27,42 @@ class _AddAuthorityScreenState extends State<AddAuthorityScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isSubmitting = false);
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Authority added successfully!')),
+    final model = AuthorityRequestModel(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.trim(),
+      password: _passwordController.text.trim(),
+      address: _addressController.text.trim().isEmpty
+          ? null
+          : _addressController.text.trim(),
     );
-    Navigator.pop(context);
+
+    try {
+      final repo = getIt<SchoolRepository>();
+      await repo.addAuthority(widget.schoolId, model);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Authority added successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add authority: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override

@@ -267,15 +267,12 @@ class DashboardScreen extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFFF6A00), // Bright Orange
-                  Color.fromARGB(255, 255, 50, 50), // Red
-                ],
+                colors: [Color(0xFFFF6A00), Color.fromARGB(255, 255, 50, 50)],
               ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.deepOrange.withOpacity(0.3),
+                  color: Colors.deepOrange.withValues(alpha: 0.3),
                   blurRadius: 6,
                   offset: const Offset(2, 3),
                 ),
@@ -297,18 +294,18 @@ class DashboardScreen extends StatelessWidget {
                     school.address!,
                     style: const TextStyle(fontSize: 12, color: Colors.white70),
                   ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   "Missing Photos: ${school.missingPhotosCount}",
                   style: const TextStyle(color: Colors.white),
                 ),
-                const Spacer(),
+                const SizedBox(height: 2),
                 Align(
                   alignment: Alignment.bottomRight,
                   child: TextButton(
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.white,
-                      backgroundColor: Colors.black.withOpacity(0.2),
+                      backgroundColor: Colors.black.withValues(alpha: 0.2),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 4,
