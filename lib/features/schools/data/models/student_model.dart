@@ -6,6 +6,7 @@ class StudentModel {
   final String? photo;
   final String? className;
   final int schoolId;
+  final String? schoolName;
   final String? updatedAt;
 
   StudentModel({
@@ -16,6 +17,7 @@ class StudentModel {
     this.photo,
     this.className,
     required this.schoolId,
+    required this.schoolName,
     this.updatedAt,
   });
 
@@ -28,6 +30,7 @@ class StudentModel {
       photo: json['photo'] as String?,
       className: json['class'] as String?,
       schoolId: json['school_id'] as int,
+      schoolName: json['school_name'] as String? ?? '',
       updatedAt: json['updated_at'] as String?,
     );
   }

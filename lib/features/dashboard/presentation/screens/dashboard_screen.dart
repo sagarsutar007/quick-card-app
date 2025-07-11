@@ -37,7 +37,7 @@ class DashboardScreen extends StatelessWidget {
         drawer: const AppDrawer(),
         appBar: AppBar(
           centerTitle: true,
-          title: const Text("Home"),
+          title: const Text("Quick Card Dashboard"),
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 0,
@@ -133,7 +133,7 @@ class DashboardScreen extends StatelessWidget {
                             dashboard.studentsWithPhoto,
                             [Color(0xFF01619E), Color(0xFF00B4DB)],
                             () {
-                              context.push('/students?with_photo=true');
+                              context.push('/students?status=uploaded');
                             },
                           ),
                           _buildStatCard(
@@ -141,7 +141,7 @@ class DashboardScreen extends StatelessWidget {
                             dashboard.studentsWithoutPhoto,
                             [Color(0xFFFF416C), Color(0xFFFF4B2B)],
                             () {
-                              context.push('/students?with_photo=false');
+                              context.push('/students?status=not_uploaded');
                             },
                           ),
                         ],
@@ -164,7 +164,7 @@ class DashboardScreen extends StatelessWidget {
                               "${activity.action} - ${activity.description}",
                             ),
                             subtitle: Text(
-                              "IP: ${activity.ipAddress} | ${DateFormat.yMMMd().add_jm().format(activity.createdAt)}",
+                              "IP: ${activity.ipAddress} | ${DateFormat.yMMMd().add_jm().format(activity.createdAt.toLocal())}",
                             ),
                           );
                         },

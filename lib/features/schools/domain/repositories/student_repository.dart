@@ -7,6 +7,10 @@ abstract class StudentRepository {
     Map<String, dynamic>? queryParams,
   });
 
+  Future<StudentListResponseModel> filterStudents({
+    Map<String, dynamic>? queryParams,
+  });
+
   Future<void> uploadPhoto(String studentId, File imageFile);
   Future<void> removePhoto(String studentId);
 }

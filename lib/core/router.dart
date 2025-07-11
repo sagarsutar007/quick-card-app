@@ -3,9 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:quickcard/features/auth/presentation/screens/login_screen.dart';
 import 'package:quickcard/features/auth/presentation/screens/root_screen.dart';
 import 'package:quickcard/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:quickcard/features/profile/presentation/screens/my_profile_screen.dart';
 import 'package:quickcard/features/schools/presentation/screens/school_list_screen.dart';
 import 'package:quickcard/features/schools/presentation/screens/school_students_screen.dart';
 import 'package:quickcard/features/schools/presentation/screens/add_authority_screen.dart';
+import 'package:quickcard/features/schools/presentation/screens/student_list_screen.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/',
@@ -48,6 +50,19 @@ final GoRouter router = GoRouter(
           state,
           SchoolStudentsScreen(schoolId: int.parse(schoolId)),
         );
+      },
+    ),
+    GoRoute(
+      path: '/students',
+      builder: (context, state) {
+        final status = state.uri.queryParameters['status'];
+        return StudentsListScreen(status: status);
+      },
+    ),
+    GoRoute(
+      path: '/profile',
+      pageBuilder: (context, state) {
+        return _buildSlideTransition(state, MyProfileScreen());
       },
     ),
   ],

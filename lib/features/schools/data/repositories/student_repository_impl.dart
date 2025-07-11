@@ -30,6 +30,26 @@ class StudentRepositoryImpl implements StudentRepository {
   }
 
   @override
+  Future<StudentListResponseModel> filterStudents({
+    Map<String, dynamic>? queryParams,
+  }) async {
+    final uri = Uri(
+      path: '/all-students',
+      queryParameters: queryParams?.map(
+        (key, value) => MapEntry(key, value?.toString()),
+      ),
+    );
+
+    // Debug print full URL and query params
+    print('[DEBUG] GET ${uri.toString()}');
+    print('[DEBUG] Query Params: $queryParams');
+
+    final response = await apiClient.get('/all-students', queryParams);
+
+    return StudentListResponseModel.fromJson(response.data);
+  }
+
+  @override
   Future<void> uploadPhoto(String studentId, File imageFile) async {
     return remoteDataSource.uploadPhoto(studentId, imageFile);
   }

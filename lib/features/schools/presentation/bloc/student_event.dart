@@ -122,3 +122,56 @@ class LoadMoreStudents extends StudentEvent {
   int get hashCode =>
       Object.hash(schoolId, nextPage, query, status, studentClass, dob);
 }
+
+class FetchStudents extends StudentEvent {
+  final String? query;
+  final String? status;
+  final String? studentClass;
+  final String? dob;
+  final int page;
+  final bool isRefresh;
+
+  const FetchStudents({
+    this.query,
+    this.status,
+    this.studentClass,
+    this.dob,
+    this.page = 1,
+    this.isRefresh = false,
+  });
+
+  @override
+  String toString() {
+    return 'FetchStudents(status: $status, query: $query, class: $studentClass, dob: $dob, page: $page)';
+  }
+}
+
+class FetchMoreStudents extends StudentEvent {
+  final int nextPage;
+  final String? query;
+  final String? status;
+  final String? studentClass;
+  final String? dob;
+
+  const FetchMoreStudents({
+    required this.nextPage,
+    this.query,
+    this.status,
+    this.studentClass,
+    this.dob,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FetchMoreStudents &&
+          runtimeType == other.runtimeType &&
+          nextPage == other.nextPage &&
+          query == other.query &&
+          status == other.status &&
+          studentClass == other.studentClass &&
+          dob == other.dob;
+
+  @override
+  int get hashCode => Object.hash(nextPage, query, status, studentClass, dob);
+}
