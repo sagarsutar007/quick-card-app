@@ -86,6 +86,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         _isLoading = true;
                       });
 
+                      // try {
+                      //   final authRepository = getIt<AuthRepository>();
+                      //   final user = await authRepository.login(
+                      //     emailOrPhone,
+                      //     password,
+                      //   );
+                      //   debugPrint("Logged in user: ${user.name}");
+                      //   if (context.mounted) {
+                      //     context.go('/dashboard');
+                      //   }
+                      // } catch (e) {
+                      //   debugPrint("Login failed: $e");
+                      // } finally {
+                      //   // Optional: only reset loading if login fails
+                      //   if (context.mounted && _isLoading) {
+                      //     setState(() {
+                      //       _isLoading = false;
+                      //     });
+                      //   }
+                      // }
+
                       try {
                         final authRepository = getIt<AuthRepository>();
                         final user = await authRepository.login(
@@ -98,8 +119,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         }
                       } catch (e) {
                         debugPrint("Login failed: $e");
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Login failed: ${e.toString()}'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       } finally {
-                        // Optional: only reset loading if login fails
                         if (context.mounted && _isLoading) {
                           setState(() {
                             _isLoading = false;

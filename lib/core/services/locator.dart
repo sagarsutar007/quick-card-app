@@ -27,7 +27,7 @@ Future<void> setupLocator() async {
   getIt.registerLazySingleton<Dio>(() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'http://192.168.31.24:8000/api',
+        baseUrl: 'https://thequickcard.com/api',
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         headers: {'Accept': 'application/json'},

@@ -25,16 +25,15 @@ class ApiClient {
 
   Future<Response> get(String path, [Map<String, dynamic>? params]) async {
     try {
-      debugPrint('🔍 Query params: $params');
       final response = await dio.get(path, queryParameters: params);
       return response;
     } catch (e) {
-      if (e is DioException && e.response != null) {
-        final raw = e.response?.data?.toString() ?? 'null';
-        debugPrint(
-          'Dio error response data: ${raw.substring(0, raw.length > 1000 ? 1000 : raw.length)}',
-        );
-      }
+      // if (e is DioException && e.response != null) {
+      //   final raw = e.response?.data?.toString() ?? 'null';
+      //   debugPrint(
+      //     'Dio error response data: ${raw.substring(0, raw.length > 1000 ? 1000 : raw.length)}',
+      //   );
+      // }
 
       rethrow;
     }

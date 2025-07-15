@@ -59,7 +59,7 @@ class AppDrawer extends StatelessWidget {
                       )
                     else if (user?.gender != null)
                       Text(
-                        user!.gender,
+                        user?.gender ?? '-',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 14,

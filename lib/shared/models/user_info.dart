@@ -15,7 +15,7 @@ class UserInfo {
   final String? whatsapp;
   final String? threads;
   final String? website;
-  final String gender;
+  final String? gender;
   final String? dob;
   final int? schoolId;
   final int status;
@@ -38,7 +38,7 @@ class UserInfo {
     this.whatsapp,
     this.threads,
     this.website,
-    required this.gender,
+    this.gender,
     this.dob,
     required this.schoolId,
     required this.status,

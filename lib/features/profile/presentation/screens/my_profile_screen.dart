@@ -138,7 +138,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             buildProfileField(
                               context: context,
                               label: 'Gender',
-                              value: user!.gender,
+                              value: user?.gender ?? '-',
                               icon: Icons.person_outline,
                               readOnly: true,
                             ),

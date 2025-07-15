@@ -8,6 +8,7 @@
         android:maxSdkVersion="28" />
     <!-- Add this if you need to request legacy storage for Android 10+ -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Quick Card"
         android:name="${applicationName}"
