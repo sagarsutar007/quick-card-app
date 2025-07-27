@@ -657,7 +657,7 @@ String _resolvePhotoUrl(String? photo) {
   if (photo == null || photo.isEmpty) return '';
   final baseUrl = photo.startsWith('http')
       ? photo
-      : 'https://thequickcard.com/api/uploads/images/students/$photo';
+      : 'https://thequickcard.com/uploads/images/students/$photo';
   final timestamp = DateTime.now().millisecondsSinceEpoch;
   return '$baseUrl?v=$timestamp';
 }

@@ -92,8 +92,10 @@ class AppDrawer extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.logout),
                 title: const Text("Logout"),
-                onTap: () {
-                  StorageService().clearAll();
+                onTap: () async {
+                  final storageService = StorageService();
+                  await storageService.init();
+                  await storageService.clearAll();
                   context.go('/login');
                 },
               ),
