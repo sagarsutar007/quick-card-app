@@ -485,8 +485,7 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
                       ],
                     ),
                     const SizedBox(height: 35),
-
-                    if (canUpload)
+                    if (canUpload && student.lock != 1)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
@@ -525,7 +524,8 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
 
                     if (canRemove &&
                         student.photo != null &&
-                        student.photo!.isNotEmpty)
+                        student.photo!.isNotEmpty &&
+                        student.lock != 1)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(

@@ -28,7 +28,9 @@ class SchoolStudentsScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => StudentBloc(getIt())..add(LoadStudents(schoolId)),
+          create: (_) =>
+              StudentBloc(getIt())
+                ..add(LoadStudents(schoolId, status: 'missing')),
         ),
         BlocProvider(
           create: (_) => PhotoBloc(
@@ -162,7 +164,7 @@ class SchoolStudentsScreen extends StatelessWidget {
                     schoolId: schoolId,
                     status: 'missing',
                     onTabActive: () => context.read<StudentBloc>().add(
-                      LoadStudents(schoolId, status: 'not uploaded'),
+                      LoadStudents(schoolId, status: 'missing'),
                     ),
                   ),
                   _StudentListView(
@@ -174,8 +176,10 @@ class SchoolStudentsScreen extends StatelessWidget {
                   ),
                   _StudentListView(
                     schoolId: schoolId,
-                    onTabActive: () =>
-                        context.read<StudentBloc>().add(LoadStudents(schoolId)),
+                    status: 'all',
+                    onTabActive: () => context.read<StudentBloc>().add(
+                      LoadStudents(schoolId, status: 'all'),
+                    ),
                   ),
                 ],
               ),
@@ -563,7 +567,7 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
                     ),
                     const SizedBox(height: 35),
 
-                    if (canUpload)
+                    if (canUpload && student.lock != 1)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
@@ -602,7 +606,8 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
 
                     if (canRemove &&
                         student.photo != null &&
-                        student.photo!.isNotEmpty)
+                        student.photo!.isNotEmpty &&
+                        student.lock != 1)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
@@ -652,7 +657,7 @@ String _resolvePhotoUrl(String? photo) {
   if (photo == null || photo.isEmpty) return '';
   final baseUrl = photo.startsWith('http')
       ? photo
-      : 'https://thequickcard.com/uploads/images/students/$photo';
+      : 'https://thequickcard.com/api/uploads/images/students/$photo';
   final timestamp = DateTime.now().millisecondsSinceEpoch;
   return '$baseUrl?v=$timestamp';
 }

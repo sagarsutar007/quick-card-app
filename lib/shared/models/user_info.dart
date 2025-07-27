@@ -17,6 +17,7 @@ class UserInfo {
   final String? website;
   final String? gender;
   final String? dob;
+  final int? lock;
   final int? schoolId;
   final int status;
   final String token;
@@ -40,6 +41,7 @@ class UserInfo {
     this.website,
     this.gender,
     this.dob,
+    this.lock,
     required this.schoolId,
     required this.status,
     required this.token,
@@ -65,6 +67,7 @@ class UserInfo {
       website: json['website'],
       gender: json['gender'],
       dob: json['dob'],
+      lock: json['lock'],
       schoolId: json['school_id'],
       status: json['status'],
       token: token,
@@ -95,6 +98,7 @@ class UserInfo {
       'website': website,
       'gender': gender,
       'dob': dob,
+      'lock': lock,
       'school_id': schoolId,
       'status': status,
       'token': token,

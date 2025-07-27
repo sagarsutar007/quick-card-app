@@ -35,6 +35,7 @@ class StudentLoaded extends StudentState {
   final String? currentStatus;
   final String? studentClass;
   final String? dob;
+  final int? lock;
   final bool isLoading;
   final bool canAddAuthority;
 
@@ -48,6 +49,7 @@ class StudentLoaded extends StudentState {
     this.currentStatus,
     this.studentClass,
     this.dob,
+    this.lock,
     this.isLoading = false,
     required this.canAddAuthority,
   });
@@ -62,6 +64,7 @@ class StudentLoaded extends StudentState {
     String? currentStatus,
     String? studentClass,
     String? dob,
+    int? lock,
     bool? isLoading,
     bool? canAddAuthority,
   }) {
@@ -75,6 +78,7 @@ class StudentLoaded extends StudentState {
       currentStatus: currentStatus ?? this.currentStatus,
       studentClass: studentClass ?? this.studentClass,
       dob: dob ?? this.dob,
+      lock: lock ?? this.lock,
       isLoading: isLoading ?? this.isLoading,
       canAddAuthority: canAddAuthority ?? this.canAddAuthority,
     );
@@ -94,6 +98,7 @@ class StudentLoaded extends StudentState {
           currentStatus == other.currentStatus &&
           studentClass == other.studentClass &&
           dob == other.dob &&
+          lock == other.lock &&
           isLoading == other.isLoading &&
           canAddAuthority == other.canAddAuthority;
 
@@ -108,6 +113,7 @@ class StudentLoaded extends StudentState {
     currentStatus,
     studentClass,
     dob,
+    lock,
     isLoading,
     canAddAuthority,
   );

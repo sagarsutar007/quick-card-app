@@ -3,6 +3,7 @@ class StudentModel {
   final String name;
   final String studentCode;
   final String? dob;
+  final int? lock;
   final String? photo;
   final String? className;
   final int schoolId;
@@ -14,6 +15,7 @@ class StudentModel {
     required this.name,
     required this.studentCode,
     this.dob,
+    this.lock,
     this.photo,
     this.className,
     required this.schoolId,
@@ -27,6 +29,7 @@ class StudentModel {
       name: json['name'] as String,
       studentCode: json['student_code'] as String,
       dob: json['dob'] as String?,
+      lock: json['lock'] as int? ?? 0,
       photo: json['photo'] as String?,
       className: json['class'] as String?,
       schoolId: json['school_id'] as int,
