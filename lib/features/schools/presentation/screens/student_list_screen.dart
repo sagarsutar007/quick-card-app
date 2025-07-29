@@ -24,6 +24,12 @@ class StudentsListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final normalizedStatus = status == null
+        ? ''
+        : status == 'uploaded'
+        ? 'uploaded'
+        : 'missing';
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -34,7 +40,7 @@ class StudentsListScreen extends StatelessWidget {
                     ? ''
                     : status == 'uploaded'
                     ? 'uploaded'
-                    : 'not_uploaded',
+                    : 'missing',
               ),
             ),
         ),
@@ -135,7 +141,19 @@ class StudentsListScreen extends StatelessWidget {
                             color: Colors.white,
                             onPressed: () {
                               final bloc = context.read<StudentBloc>();
-                              _openFilterSheet(context, bloc);
+                              final state = bloc.state;
+
+                              if (state is StudentLoaded) {
+                                final classList =
+                                    state.students
+                                        .map((s) => s.className)
+                                        .whereType<String>()
+                                        .toSet()
+                                        .toList()
+                                      ..sort();
+
+                                _openFilterSheet(context, bloc, classList);
+                              }
                             },
                           ),
                         ],
@@ -145,9 +163,7 @@ class StudentsListScreen extends StatelessWidget {
                 ),
               ),
             ),
-            body: _StudentListView(
-              status: status == 'missing' ? 'not uploaded' : status,
-            ),
+            body: _StudentListView(status: normalizedStatus),
           ),
         ),
       ),
@@ -181,7 +197,12 @@ class _StudentListViewState extends State<_StudentListView>
     if (state is StudentLoaded && state.hasMore && !state.isLoading) {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        bloc.add(FetchMoreStudents(nextPage: state.currentPage + 1));
+        bloc.add(
+          FetchMoreStudents(
+            nextPage: state.currentPage + 1,
+            status: widget.status,
+          ),
+        );
       }
     }
   }
@@ -289,7 +310,11 @@ class _StudentListViewState extends State<_StudentListView>
   bool get wantKeepAlive => true;
 }
 
-void _openFilterSheet(BuildContext context, StudentBloc bloc) {
+void _openFilterSheet(
+  BuildContext context,
+  StudentBloc bloc,
+  List<String> classList,
+) {
   String? selectedClass;
   String? selectedDobYear;
 
@@ -319,13 +344,15 @@ void _openFilterSheet(BuildContext context, StudentBloc bloc) {
                     value: selectedClass,
                     hint: const Text("Select Class"),
                     onChanged: (value) => setState(() => selectedClass = value),
-                    items: List.generate(
-                      12,
-                      (index) => DropdownMenuItem(
-                        value: '${index + 1}',
-                        child: Text('Class ${index + 1}'),
+                    items: [
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('All Classes'),
                       ),
-                    ),
+                      ...classList.map(
+                        (cls) => DropdownMenuItem(value: cls, child: Text(cls)),
+                      ),
+                    ],
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Class',
