@@ -96,6 +96,7 @@ class AppDrawer extends StatelessWidget {
                   final storageService = StorageService();
                   await storageService.init();
                   await storageService.clearAll();
+                  // ignore: use_build_context_synchronously
                   context.go('/login');
                 },
               ),
