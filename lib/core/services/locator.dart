@@ -1,5 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
+import 'package:hive/hive.dart';
+import 'package:quickcard/core/services/connectivity_service.dart';
 import 'package:quickcard/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:quickcard/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:quickcard/features/schools/data/usecases/remove_student_photo_impl.dart';
@@ -13,6 +15,7 @@ import 'package:quickcard/features/schools/domain/usecases/remove_student_photo.
 import 'package:quickcard/features/schools/data/usecases/upload_student_photo_impl.dart';
 import 'package:quickcard/features/schools/presentation/bloc/photo/photo_bloc.dart';
 import 'package:quickcard/features/schools/presentation/bloc/student_bloc.dart';
+import 'package:quickcard/shared/utils/photo_upload_queue.dart';
 
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -21,14 +24,15 @@ import '../services/storage_service.dart';
 import '../services/user_service.dart';
 
 final getIt = GetIt.instance;
+const String baseUrl = 'https://thequickcard.com/api';
+// const String baseUrl = 'http://192.168.31.24:8000/api';
 
 Future<void> setupLocator() async {
   // Dio instance
   getIt.registerLazySingleton<Dio>(() {
     final dio = Dio(
       BaseOptions(
-        baseUrl:
-            'https://thequickcard.com/api', // https://thequickcard.com/api - http://192.168.31.24:8000/api
+        baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         headers: {'Accept': 'application/json'},
@@ -96,6 +100,7 @@ Future<void> setupLocator() async {
     () => StudentRepositoryImpl(
       apiClient: getIt<ApiClient>(),
       remoteDataSource: StudentRemoteDataSourceImpl(getIt<ApiClient>()),
+      pendingPhotosBox: getIt<Box>(),
     ),
   );
 
@@ -115,7 +120,6 @@ Future<void> setupLocator() async {
     () => RemoveStudentPhotoImpl(getIt<StudentRepository>()),
   );
 
-  // Register PhotoBloc
   getIt.registerFactory<PhotoBloc>(
     () => PhotoBloc(
       uploadStudentPhoto: getIt<UploadStudentPhoto>(),
@@ -125,6 +129,13 @@ Future<void> setupLocator() async {
 
   getIt.registerFactory<StudentBloc>(() => StudentBloc(getIt()));
 
-  // Wait for all async singletons to be ready
+  getIt.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
+
+  getIt.registerLazySingletonAsync<PhotoUploadQueue>(() async {
+    final storage = await getIt.getAsync<StorageService>();
+    final dio = getIt<Dio>();
+    return PhotoUploadQueue(dio, baseUrl, storage.token ?? '');
+  });
+
   await getIt.allReady();
 }

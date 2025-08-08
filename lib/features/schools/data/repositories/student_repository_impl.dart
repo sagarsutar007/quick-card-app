@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
 import 'package:quickcard/core/error/exceptions.dart';
 import 'package:quickcard/core/network/api_client.dart';
 import 'package:quickcard/features/schools/data/datasources/student_remote_data_source.dart';
@@ -10,10 +11,12 @@ import 'package:quickcard/features/schools/domain/repositories/student_repositor
 class StudentRepositoryImpl implements StudentRepository {
   final ApiClient apiClient;
   final StudentRemoteDataSource remoteDataSource;
+  final Box pendingPhotosBox;
 
   StudentRepositoryImpl({
     required this.apiClient,
     required this.remoteDataSource,
+    required this.pendingPhotosBox,
   });
 
   @override
@@ -51,7 +54,18 @@ class StudentRepositoryImpl implements StudentRepository {
 
   @override
   Future<void> uploadPhoto(String studentId, File imageFile) async {
-    return remoteDataSource.uploadPhoto(studentId, imageFile);
+    try {
+      await remoteDataSource.uploadPhoto(studentId, imageFile);
+      await pendingPhotosBox.delete(studentId);
+    } on NetworkException {
+      await pendingPhotosBox.put(studentId, {
+        'studentId': studentId,
+        'photoPath': imageFile.path,
+        'status': 'pending_upload',
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+      rethrow;
+    }
   }
 
   @override
