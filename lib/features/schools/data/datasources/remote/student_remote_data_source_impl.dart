@@ -22,7 +22,7 @@ class StudentRemoteDataSourceImpl implements StudentRemoteDataSource {
       final formData = FormData.fromMap({
         'photo': await MultipartFile.fromFile(
           imageFile.path,
-          filename: 'student_$studentId.jpg',
+          filename: imageFile.path.split('/').last,
         ),
         'student_id': studentId,
       });

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +19,7 @@ import 'package:quickcard/features/schools/presentation/bloc/photo/photo_state.d
 import 'package:quickcard/features/schools/presentation/bloc/student_bloc.dart';
 import 'package:quickcard/features/schools/presentation/bloc/student_event.dart';
 import 'package:quickcard/features/schools/presentation/bloc/student_state.dart';
+import 'package:quickcard/shared/models/photo_upload.dart';
 
 class SchoolStudentsScreen extends StatefulWidget {
   final int schoolId;
@@ -30,8 +32,8 @@ class SchoolStudentsScreen extends StatefulWidget {
 class _SchoolStudentsScreenState extends State<SchoolStudentsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  // ignore: unused_field
   late String _searchQuery;
+  bool _tabListenerAttached = false;
 
   @override
   void initState() {
@@ -46,6 +48,20 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen>
     super.dispose();
   }
 
+  void _setupTabListener(BuildContext context) {
+    if (_tabListenerAttached) return;
+    _tabListenerAttached = true;
+
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) return;
+
+      final status = _getStatusFromTabIndex(_tabController.index);
+      context.read<StudentBloc>().add(
+        LoadStudents(widget.schoolId, status: status),
+      );
+    });
+  }
+
   String _getStatusFromTabIndex(int index) {
     switch (index) {
       case 0:
@@ -53,6 +69,7 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen>
       case 1:
         return 'uploaded';
       case 2:
+        return 'all';
       default:
         return 'all';
     }
@@ -65,9 +82,10 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen>
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) =>
-              StudentBloc(getIt())
-                ..add(LoadStudents(schoolId, status: 'missing')),
+          create: (_) => StudentBloc(getIt())
+            ..add(
+              LoadStudents(schoolId, status: 'missing'),
+            ), // Only load Missing tab initially
         ),
         BlocProvider(
           create: (_) => PhotoBloc(
@@ -77,158 +95,145 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen>
         ),
       ],
       child: Builder(
-        builder: (context) => GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => FocusScope.of(context).unfocus(),
-          child: Scaffold(
-            appBar: AppBar(
-              title: const Text('School Students'),
-              leading: const BackButton(),
-              actions: [
-                BlocBuilder<StudentBloc, StudentState>(
-                  builder: (context, state) {
-                    if (state is StudentLoaded && state.canAddAuthority) {
-                      return IconButton(
-                        icon: const Icon(Icons.person_add),
-                        tooltip: 'Add Authority',
-                        onPressed: () {
-                          context.push(
-                            '/school/${schoolId.toString()}/add-authority',
-                          );
-                        },
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(100),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: BlocBuilder<StudentBloc, StudentState>(
-                        builder: (context, state) {
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  onChanged: (query) {
-                                    _searchQuery = query;
-                                    final currentStatus =
-                                        _getStatusFromTabIndex(
-                                          _tabController.index,
-                                        );
-                                    context.read<StudentBloc>().add(
-                                      SearchStudents(
-                                        schoolId,
-                                        query,
-                                        status: currentStatus,
-                                      ),
-                                    );
-                                  },
-                                  style: const TextStyle(
-                                    color: Colors.deepOrange,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: 'Search by name, udise, code...',
-                                    hintStyle: TextStyle(
-                                      color: Colors.deepOrange.withAlpha(150),
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.search,
+        builder: (context) {
+          // Setup tab listener after provider is available
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _setupTabListener(context);
+          });
+
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('School Students'),
+                leading: const BackButton(),
+                actions: [
+                  BlocBuilder<StudentBloc, StudentState>(
+                    builder: (context, state) {
+                      if (state is StudentLoaded && state.canAddAuthority) {
+                        return IconButton(
+                          icon: const Icon(Icons.person_add),
+                          tooltip: 'Add Authority',
+                          onPressed: () {
+                            context.push(
+                              '/school/${schoolId.toString()}/add-authority',
+                            );
+                          },
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(100),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: BlocBuilder<StudentBloc, StudentState>(
+                          builder: (context, state) {
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    onChanged: (query) {
+                                      _searchQuery = query;
+                                      final currentStatus =
+                                          _getStatusFromTabIndex(
+                                            _tabController.index,
+                                          );
+                                      context.read<StudentBloc>().add(
+                                        SearchStudents(
+                                          schoolId,
+                                          query,
+                                          status: currentStatus,
+                                        ),
+                                      );
+                                    },
+                                    style: const TextStyle(
                                       color: Colors.deepOrange,
                                     ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
-                                    filled: true,
-                                    fillColor: const Color.fromARGB(
-                                      255,
-                                      255,
-                                      251,
-                                      246,
+                                    decoration: InputDecoration(
+                                      hintText:
+                                          'Search by name, udise, code...',
+                                      hintStyle: TextStyle(
+                                        color: Colors.deepOrange.withAlpha(150),
+                                      ),
+                                      prefixIcon: const Icon(
+                                        Icons.search,
+                                        color: Colors.deepOrange,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      filled: true,
+                                      fillColor: const Color.fromARGB(
+                                        255,
+                                        255,
+                                        251,
+                                        246,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.filter_list),
-                                color: Colors.white,
-                                onPressed: () {
-                                  final bloc = context.read<StudentBloc>();
-                                  final state = bloc.state;
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.filter_list),
+                                  color: Colors.white,
+                                  onPressed: () {
+                                    final bloc = context.read<StudentBloc>();
+                                    final state = bloc.state;
 
-                                  if (state is StudentLoaded) {
-                                    final classList =
-                                        state.students
-                                            .map((s) => s.className)
-                                            .whereType<String>()
-                                            .toSet()
-                                            .toList()
-                                          ..sort();
+                                    if (state is StudentLoaded) {
+                                      final classList =
+                                          state.students
+                                              .map((s) => s.className)
+                                              .whereType<String>()
+                                              .toSet()
+                                              .toList()
+                                            ..sort();
 
-                                    _openFilterSheet(
-                                      context,
-                                      schoolId,
-                                      bloc,
-                                      classList,
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          );
-                        },
+                                      _openFilterSheet(
+                                        context,
+                                        schoolId,
+                                        bloc,
+                                        classList,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: Colors.white,
-                      unselectedLabelColor: Colors.white70,
-                      tabs: const [
-                        Tab(text: "Missing"),
-                        Tab(text: "Uploaded"),
-                        Tab(text: "All"),
-                      ],
-                    ),
-                  ],
+                      TabBar(
+                        controller: _tabController,
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.white70,
+                        tabs: const [
+                          Tab(text: "Missing"),
+                          Tab(text: "Uploaded"),
+                          Tab(text: "All"),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _StudentListView(schoolId: schoolId, status: 'missing'),
+                  _StudentListView(schoolId: schoolId, status: 'uploaded'),
+                  _StudentListView(schoolId: schoolId, status: 'all'),
+                ],
+              ),
             ),
-            body: TabBarView(
-              controller: _tabController,
-              children: [
-                _StudentListView(
-                  schoolId: schoolId,
-                  status: 'missing',
-                  tabController: _tabController,
-                  onTabActive: () => context.read<StudentBloc>().add(
-                    LoadStudents(schoolId, status: 'missing'),
-                  ),
-                ),
-                _StudentListView(
-                  schoolId: schoolId,
-                  status: 'uploaded',
-                  tabController: _tabController,
-                  onTabActive: () => context.read<StudentBloc>().add(
-                    LoadStudents(schoolId, status: 'uploaded'),
-                  ),
-                ),
-                _StudentListView(
-                  schoolId: schoolId,
-                  status: 'all',
-                  tabController: _tabController,
-                  onTabActive: () => context.read<StudentBloc>().add(
-                    LoadStudents(schoolId, status: 'all'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -237,15 +242,8 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen>
 class _StudentListView extends StatefulWidget {
   final int schoolId;
   final String? status;
-  final TabController tabController;
-  final VoidCallback? onTabActive;
 
-  const _StudentListView({
-    required this.schoolId,
-    this.status,
-    required this.tabController,
-    this.onTabActive,
-  });
+  const _StudentListView({required this.schoolId, this.status});
 
   @override
   State<_StudentListView> createState() => _StudentListViewState();
@@ -259,34 +257,6 @@ class _StudentListViewState extends State<_StudentListView>
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    if (!_tabControllerAttached) {
-      _tabControllerAttached = true;
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.tabController.addListener(() {
-          if (widget.tabController.index == _getTabIndex() &&
-              widget.onTabActive != null) {
-            widget.onTabActive!();
-          }
-        });
-      });
-    }
-  }
-
-  bool _tabControllerAttached = false;
-
-  int _getTabIndex() {
-    return widget.status == null
-        ? 0
-        : widget.status == 'uploaded'
-        ? 1
-        : 2;
   }
 
   void _onScroll() {
@@ -325,12 +295,7 @@ class _StudentListViewState extends State<_StudentListView>
                 ElevatedButton(
                   onPressed: () {
                     context.read<StudentBloc>().add(
-                      LoadStudents(
-                        widget.schoolId,
-                        status: widget.status == 'missing'
-                            ? 'not uploaded'
-                            : widget.status,
-                      ),
+                      LoadStudents(widget.schoolId, status: widget.status),
                     );
                   },
                   child: const Text('Retry'),
@@ -341,23 +306,28 @@ class _StudentListViewState extends State<_StudentListView>
         }
 
         if (state is StudentLoaded) {
-          final filteredStudents = widget.status == null
-              ? state.students
-              : state.students.where((student) {
-                  final hasPhoto =
-                      student.photo != null && student.photo!.isNotEmpty;
-                  return widget.status == 'uploaded' ? hasPhoto : !hasPhoto;
-                }).toList();
+          // Check if this is the correct tab's data
+          final isCorrectTab =
+              (widget.status == 'missing' &&
+                  state.currentStatus == 'missing') ||
+              (widget.status == 'uploaded' &&
+                  state.currentStatus == 'uploaded') ||
+              (widget.status == 'all' && state.currentStatus == 'all');
 
-          if (filteredStudents.isEmpty) {
+          if (!isCorrectTab) {
+            // Show loading while waiting for correct data
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.students.isEmpty) {
             return const Center(child: Text('No students found.'));
           }
 
           return ListView.builder(
             controller: _scrollController,
-            itemCount: filteredStudents.length + (state.hasMore ? 1 : 0),
+            itemCount: state.students.length + (state.hasMore ? 1 : 0),
             itemBuilder: (context, index) {
-              if (index >= filteredStudents.length) {
+              if (index >= state.students.length) {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(12),
@@ -366,7 +336,7 @@ class _StudentListViewState extends State<_StudentListView>
                 );
               }
 
-              final student = filteredStudents[index];
+              final student = state.students[index];
 
               return ListTile(
                 leading: CircleAvatar(
@@ -526,13 +496,58 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
           listener: (context, photoState) {
             if (photoState is PhotoUploadSuccess ||
                 photoState is PhotoRemoveSuccess) {
+              ScaffoldMessenger.of(modalContext).showSnackBar(
+                const SnackBar(
+                  content: Text('Saved successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+
               bloc.add(
                 LoadStudents(student.schoolId, status: state.currentStatus),
               );
 
-              if (Navigator.canPop(modalContext)) {
-                Navigator.pop(modalContext);
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (Navigator.canPop(modalContext)) {
+                  Navigator.pop(modalContext);
+                }
+              });
+            }
+
+            if (photoState is PhotoUploadFailure ||
+                photoState is PhotoRemoveFailure) {
+              final errorMessage = (photoState is PhotoUploadFailure)
+                  ? photoState.error
+                  : (photoState as PhotoRemoveFailure).error;
+
+              final isInternetError =
+                  errorMessage.contains('SocketException') ||
+                  errorMessage.contains('Failed host lookup') ||
+                  errorMessage.contains('Network');
+
+              final box = Hive.box<PhotoUpload>('photo_uploads');
+              final allPhotos = box.values.toList();
+              debugPrint(
+                "📦 Hive DB currently has ${allPhotos.length} photo(s)",
+              );
+              for (var p in allPhotos) {
+                debugPrint(
+                  "   - Photo in DB: ${p.studentId} - ${p.status} - ${p.filePath}",
+                );
               }
+
+              Navigator.of(context).pop();
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isInternetError
+                        ? "Internet not turned on or weak internet connection"
+                        : errorMessage,
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
             }
           },
           child: DraggableScrollableSheet(
@@ -708,7 +723,8 @@ String _resolvePhotoUrl(String? photo) {
   if (photo == null || photo.isEmpty) return '';
   final baseUrl = photo.startsWith('http')
       ? photo
-      : 'https://thequickcard.com/uploads/images/students/$photo';
+      : 'http://192.168.31.24:8000/uploads/images/students/$photo'; // http://192.168.31.24:8000
+
   final timestamp = DateTime.now().millisecondsSinceEpoch;
   return '$baseUrl?v=$timestamp';
 }

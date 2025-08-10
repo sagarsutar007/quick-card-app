@@ -602,7 +602,7 @@ String _resolvePhotoUrl(String? photo) {
   if (photo == null || photo.isEmpty) return '';
   final baseUrl = photo.startsWith('http')
       ? photo
-      : 'https://thequickcard.com/uploads/images/students/$photo';
+      : 'http://192.168.31.24:8000/uploads/images/students/$photo';
   final timestamp = DateTime.now().millisecondsSinceEpoch;
   return '$baseUrl?v=$timestamp';
 }

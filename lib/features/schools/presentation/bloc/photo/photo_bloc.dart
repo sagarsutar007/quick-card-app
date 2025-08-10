@@ -30,7 +30,15 @@ class PhotoBloc extends Bloc<PhotoEvent, PhotoState> {
       );
       emit(PhotoUploadSuccess());
     } catch (e) {
-      emit(PhotoUploadFailure(e.toString()));
+      String message;
+      if (e is Failure) {
+        message = e.message ?? 'Unknown error occurred';
+      } else if (e is Exception) {
+        message = e.toString();
+      } else {
+        message = 'Unexpected error: $e';
+      }
+      emit(PhotoUploadFailure(message));
     }
   }
 

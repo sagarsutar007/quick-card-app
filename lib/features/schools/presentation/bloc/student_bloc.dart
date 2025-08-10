@@ -5,6 +5,7 @@ import 'package:quickcard/features/schools/presentation/bloc/student_state.dart'
 
 class StudentBloc extends Bloc<StudentEvent, StudentState> {
   final StudentRepository repository;
+  final Set<String> _visitedTabs = {};
 
   StudentBloc(this.repository) : super(const StudentInitial()) {
     on<LoadStudents>(_onLoadStudents);
@@ -19,6 +20,22 @@ class StudentBloc extends Bloc<StudentEvent, StudentState> {
     LoadStudents event,
     Emitter<StudentState> emit,
   ) async {
+    final statusKey = event.status ?? 'all';
+
+    if (_visitedTabs.contains(statusKey)) {
+      add(
+        RefreshStudents(
+          event.schoolId,
+          status: event.status,
+          studentClass: event.studentClass,
+          dob: event.dob,
+        ),
+      );
+      return;
+    }
+
+    _visitedTabs.add(statusKey);
+
     await _fetchStudents(
       emit,
       schoolId: event.schoolId,

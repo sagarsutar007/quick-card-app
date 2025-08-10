@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:quickcard/core/services/connectivity_service.dart';
 import 'package:quickcard/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:quickcard/features/dashboard/domain/repositories/dashboard_repository.dart';
@@ -15,6 +15,7 @@ import 'package:quickcard/features/schools/domain/usecases/remove_student_photo.
 import 'package:quickcard/features/schools/data/usecases/upload_student_photo_impl.dart';
 import 'package:quickcard/features/schools/presentation/bloc/photo/photo_bloc.dart';
 import 'package:quickcard/features/schools/presentation/bloc/student_bloc.dart';
+import 'package:quickcard/shared/models/photo_upload.dart';
 import 'package:quickcard/shared/utils/photo_upload_queue.dart';
 
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -24,10 +25,15 @@ import '../services/storage_service.dart';
 import '../services/user_service.dart';
 
 final getIt = GetIt.instance;
-const String baseUrl = 'https://thequickcard.com/api';
-// const String baseUrl = 'http://192.168.31.24:8000/api';
+// const String baseUrl = 'https://thequickcard.com/api';
+const String baseUrl = 'http://192.168.31.24:8000/api';
 
 Future<void> setupLocator() async {
+  await Hive.initFlutter();
+  Hive.registerAdapter(PhotoUploadAdapter());
+  final photoUploadBox = await Hive.openBox<PhotoUpload>('photo_uploads');
+  getIt.registerSingleton<Box<PhotoUpload>>(photoUploadBox);
+
   // Dio instance
   getIt.registerLazySingleton<Dio>(() {
     final dio = Dio(
@@ -100,9 +106,16 @@ Future<void> setupLocator() async {
     () => StudentRepositoryImpl(
       apiClient: getIt<ApiClient>(),
       remoteDataSource: StudentRemoteDataSourceImpl(getIt<ApiClient>()),
-      pendingPhotosBox: getIt<Box>(),
+      pendingPhotosBox: getIt<Box<PhotoUpload>>(),
     ),
   );
+
+  // Remove the startNetworkListener() call since we'll handle it centrally
+  getIt.registerLazySingletonAsync<PhotoUploadQueue>(() async {
+    final storage = await getIt.getAsync<StorageService>();
+    final token = storage.token ?? '';
+    return PhotoUploadQueue(getIt<Dio>(), baseUrl, token);
+  });
 
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(getIt<ApiClient>()),
@@ -131,11 +144,21 @@ Future<void> setupLocator() async {
 
   getIt.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
 
-  getIt.registerLazySingletonAsync<PhotoUploadQueue>(() async {
-    final storage = await getIt.getAsync<StorageService>();
-    final dio = getIt<Dio>();
-    return PhotoUploadQueue(dio, baseUrl, storage.token ?? '');
-  });
-
   await getIt.allReady();
+
+  await _initializeConnectivityAndPhotoUpload();
+}
+
+Future<void> _initializeConnectivityAndPhotoUpload() async {
+  final photoUploadQueue = await getIt.getAsync<PhotoUploadQueue>();
+  final connectivityService = getIt<ConnectivityService>();
+  final studentRepository = getIt<StudentRepository>() as StudentRepositoryImpl;
+
+  await studentRepository.retryPendingUploads();
+  await photoUploadQueue.processQueue();
+
+  connectivityService.startMonitoring(() async {
+    await studentRepository.retryPendingUploads();
+    await photoUploadQueue.processQueue();
+  });
 }

@@ -7,6 +7,7 @@ import 'package:quickcard/core/network/api_client.dart';
 import 'package:quickcard/features/schools/data/datasources/student_remote_data_source.dart';
 import 'package:quickcard/features/schools/data/models/student_list_response_model.dart';
 import 'package:quickcard/features/schools/domain/repositories/student_repository.dart';
+import 'package:quickcard/shared/models/photo_upload.dart';
 
 class StudentRepositoryImpl implements StudentRepository {
   final ApiClient apiClient;
@@ -54,16 +55,20 @@ class StudentRepositoryImpl implements StudentRepository {
 
   @override
   Future<void> uploadPhoto(String studentId, File imageFile) async {
+    final photoUpload = PhotoUpload(
+      studentId: studentId,
+      filePath: imageFile.path,
+      status: 'pending',
+      createdAt: DateTime.now(),
+    );
+
+    await pendingPhotosBox.put(studentId, photoUpload);
+
     try {
       await remoteDataSource.uploadPhoto(studentId, imageFile);
       await pendingPhotosBox.delete(studentId);
-    } on NetworkException {
-      await pendingPhotosBox.put(studentId, {
-        'studentId': studentId,
-        'photoPath': imageFile.path,
-        'status': 'pending_upload',
-        'createdAt': DateTime.now().toIso8601String(),
-      });
+    } catch (e) {
+      await pendingPhotosBox.put(studentId, photoUpload);
       rethrow;
     }
   }
@@ -81,6 +86,30 @@ class StudentRepositoryImpl implements StudentRepository {
         throw PermissionException(e.message ?? 'Permission denied');
       }
       throw UnknownException(e.message ?? 'Unknown error');
+    }
+  }
+
+  Future<void> retryPendingUploads() async {
+    final pendingPhotos = pendingPhotosBox.values.toList();
+
+    for (final photo in pendingPhotos) {
+      try {
+        final studentId = photo.studentId;
+        final photoPath = photo.filePath;
+
+        final file = File(photoPath);
+        if (!file.existsSync()) {
+          await pendingPhotosBox.delete(studentId);
+          continue;
+        }
+
+        await remoteDataSource.uploadPhoto(studentId, file);
+        await pendingPhotosBox.delete(studentId);
+        print('[RETRY] Successfully uploaded for student $studentId');
+      } catch (e) {
+        print('[RETRY] Failed for student ${photo.studentId}: $e');
+        // Leave it in Hive for next retry
+      }
     }
   }
 }

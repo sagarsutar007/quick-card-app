@@ -29,6 +29,7 @@ class PhotoUploadQueue {
   }
 
   Future<void> processQueue() async {
+    print("📦 processQueue() called");
     final box = Hive.box<PhotoUpload>('photo_uploads');
     final pending = box.values.where((p) => p.status == 'pending').toList();
 
@@ -40,6 +41,14 @@ class PhotoUploadQueue {
         final formData = FormData.fromMap({
           'photo': await MultipartFile.fromFile(photo.filePath),
         });
+
+        print("🚀 Uploading photo for studentId: ${photo.studentId}");
+        print("📂 File path: ${photo.filePath}");
+        print("📏 File size: ${File(photo.filePath).lengthSync()} bytes");
+        print("📤 FormData fields: ${formData.fields}");
+        print(
+          "📤 FormData files: ${formData.files.map((f) => f.value.filename).toList()}",
+        );
 
         final response = await _dio.post(
           '$_baseUrl/students/${photo.studentId}/upload-photo',
