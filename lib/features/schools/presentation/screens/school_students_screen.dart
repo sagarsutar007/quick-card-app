@@ -516,34 +516,12 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
 
             if (photoState is PhotoUploadFailure ||
                 photoState is PhotoRemoveFailure) {
-              final errorMessage = (photoState is PhotoUploadFailure)
-                  ? photoState.error
-                  : (photoState as PhotoRemoveFailure).error;
-
-              final isInternetError =
-                  errorMessage.contains('SocketException') ||
-                  errorMessage.contains('Failed host lookup') ||
-                  errorMessage.contains('Network');
-
-              final box = Hive.box<PhotoUpload>('photo_uploads');
-              final allPhotos = box.values.toList();
-              debugPrint(
-                "📦 Hive DB currently has ${allPhotos.length} photo(s)",
-              );
-              for (var p in allPhotos) {
-                debugPrint(
-                  "   - Photo in DB: ${p.studentId} - ${p.status} - ${p.filePath}",
-                );
-              }
-
               Navigator.of(context).pop();
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    isInternetError
-                        ? "Internet not turned on or weak internet connection"
-                        : errorMessage,
+                    "Internet not turned on or weak internet connection",
                   ),
                   backgroundColor: Colors.red,
                 ),

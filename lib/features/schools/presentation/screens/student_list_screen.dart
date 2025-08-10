@@ -237,23 +237,18 @@ class _StudentListViewState extends State<_StudentListView>
         }
 
         if (state is StudentLoaded) {
-          final filteredStudents = widget.status == null
-              ? state.students
-              : state.students.where((student) {
-                  final hasPhoto =
-                      student.photo != null && student.photo!.isNotEmpty;
-                  return widget.status == 'uploaded' ? hasPhoto : !hasPhoto;
-                }).toList();
+          // Remove the client-side filtering - let the server handle it
+          final students = state.students;
 
-          if (filteredStudents.isEmpty) {
+          if (students.isEmpty) {
             return const Center(child: Text('No students found.'));
           }
 
           return ListView.builder(
             controller: _scrollController,
-            itemCount: filteredStudents.length + (state.hasMore ? 1 : 0),
+            itemCount: students.length + (state.hasMore ? 1 : 0),
             itemBuilder: (context, index) {
-              if (index >= filteredStudents.length) {
+              if (index >= students.length) {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(12),
@@ -262,7 +257,7 @@ class _StudentListViewState extends State<_StudentListView>
                 );
               }
 
-              final student = filteredStudents[index];
+              final student = students[index];
 
               return ListTile(
                 leading: CircleAvatar(
@@ -384,7 +379,7 @@ void _openFilterSheet(
                             dob: selectedDobYear,
                             status: bloc.state is StudentLoaded
                                 ? (bloc.state as StudentLoaded).currentStatus
-                                : null, // Pass current status
+                                : null,
                           ),
                         );
                       },
@@ -417,17 +412,41 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (modalContext) {
-      return BlocProvider.value(
-        value: context.read<PhotoBloc>(),
+      return BlocProvider(
+        create: (_) => getIt<PhotoBloc>(),
         child: BlocListener<PhotoBloc, PhotoState>(
           listener: (context, photoState) {
             if (photoState is PhotoUploadSuccess ||
                 photoState is PhotoRemoveSuccess) {
+              ScaffoldMessenger.of(modalContext).showSnackBar(
+                const SnackBar(
+                  content: Text('Saved successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+
               bloc.add(FetchStudents(status: state.currentStatus));
 
-              if (Navigator.canPop(modalContext)) {
-                Navigator.pop(modalContext);
-              }
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (Navigator.canPop(modalContext)) {
+                  Navigator.pop(modalContext);
+                }
+              });
+            }
+
+            if (photoState is PhotoUploadFailure ||
+                photoState is PhotoRemoveFailure) {
+              Navigator.of(context).pop();
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    "Internet not turned on or weak internet connection",
+                  ),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
             }
           },
           child: DraggableScrollableSheet(
@@ -512,6 +531,8 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
                       ],
                     ),
                     const SizedBox(height: 35),
+
+                    // Upload Photo Button
                     if (canUpload && student.lock != 1)
                       SizedBox(
                         width: double.infinity,
@@ -549,6 +570,7 @@ void _showStudentDetailsSheet(BuildContext context, StudentModel student) {
 
                     const SizedBox(height: 8),
 
+                    // Remove Photo Button
                     if (canRemove &&
                         student.photo != null &&
                         student.photo!.isNotEmpty &&
