@@ -25,8 +25,8 @@ import '../services/storage_service.dart';
 import '../services/user_service.dart';
 
 final getIt = GetIt.instance;
-// const String baseUrl = 'https://thequickcard.com/api';
-const String baseUrl = 'http://192.168.31.24:8000/api';
+const String baseUrl = 'https://thequickcard.com/api';
+// const String baseUrl = 'http://192.168.31.24:8000/api';
 
 Future<void> setupLocator() async {
   await Hive.initFlutter();
