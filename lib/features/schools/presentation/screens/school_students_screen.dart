@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quickcard/core/services/locator.dart';
+import 'package:quickcard/core/config/app_config.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:quickcard/features/schools/data/models/student_model.dart';
@@ -699,7 +700,7 @@ String _resolvePhotoUrl(String? photo) {
   if (photo == null || photo.isEmpty) return '';
   final baseUrl = photo.startsWith('http')
       ? photo
-      : 'http://192.168.31.24:8000/uploads/images/students/$photo';
+      : '${AppConfig.imageBaseUrl}/students/$photo';
 
   final timestamp = DateTime.now().millisecondsSinceEpoch;
   return '$baseUrl?v=$timestamp';

@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:quickcard/core/services/connectivity_service.dart';
+import 'package:quickcard/core/config/app_config.dart';
 import 'package:quickcard/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:quickcard/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:quickcard/features/schools/data/usecases/remove_student_photo_impl.dart';
@@ -25,8 +26,6 @@ import '../services/storage_service.dart';
 import '../services/user_service.dart';
 
 final getIt = GetIt.instance;
-// const String baseUrl = 'https://thequickcard.com/api';
-const String baseUrl = 'http://192.168.31.24:8000/api';
 
 Future<void> setupLocator() async {
   await Hive.initFlutter();
@@ -38,7 +37,7 @@ Future<void> setupLocator() async {
   getIt.registerLazySingleton<Dio>(() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl,
+        baseUrl: AppConfig.baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         headers: {'Accept': 'application/json'},
@@ -110,11 +109,10 @@ Future<void> setupLocator() async {
     ),
   );
 
-  // Remove the startNetworkListener() call since we'll handle it centrally
   getIt.registerLazySingletonAsync<PhotoUploadQueue>(() async {
     final storage = await getIt.getAsync<StorageService>();
     final token = storage.token ?? '';
-    return PhotoUploadQueue(getIt<Dio>(), baseUrl, token);
+    return PhotoUploadQueue(getIt<Dio>(), AppConfig.baseUrl, token);
   });
 
   getIt.registerLazySingleton<AuthRepository>(
