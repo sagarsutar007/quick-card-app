@@ -20,6 +20,7 @@ class UserInfo {
   final int? lock;
   final int? schoolId;
   final int status;
+  final String role;
   final String token;
 
   UserInfo({
@@ -44,6 +45,7 @@ class UserInfo {
     this.lock,
     required this.schoolId,
     required this.status,
+    required this.role,
     required this.token,
   });
 
@@ -70,6 +72,7 @@ class UserInfo {
       lock: json['lock'],
       schoolId: json['school_id'],
       status: json['status'],
+      role: json['role'],
       token: token,
     );
   }
@@ -101,6 +104,7 @@ class UserInfo {
       'lock': lock,
       'school_id': schoolId,
       'status': status,
+      'role': role,
       'token': token,
     };
   }

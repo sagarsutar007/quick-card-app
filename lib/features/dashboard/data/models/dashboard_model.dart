@@ -61,13 +61,19 @@ class SchoolBasicInfo {
   final int id;
   final String name;
   final String? address;
+  final String? schoolCode;
   final int missingPhotosCount;
+  final int havingPhotosCount;
+  final int studentsCount;
 
   SchoolBasicInfo({
     required this.id,
     required this.name,
     this.address,
+    this.schoolCode,
     required this.missingPhotosCount,
+    required this.havingPhotosCount,
+    required this.studentsCount,
   });
 
   factory SchoolBasicInfo.fromJson(Map<String, dynamic> json) {
@@ -75,7 +81,10 @@ class SchoolBasicInfo {
       id: json['id'] ?? 0,
       name: json['name'] ?? 'Unnamed School',
       address: json['school_address'],
+      schoolCode: json['school_code'],
       missingPhotosCount: json['students_without_photo_count'] ?? 0,
+      havingPhotosCount: json['students_with_photo_count'] ?? 0,
+      studentsCount: json['students_count'] ?? 0,
     );
   }
 }

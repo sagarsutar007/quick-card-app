@@ -337,7 +337,7 @@ void _openFilterSheet(
 
                   // Class Dropdown
                   DropdownButtonFormField<String>(
-                    value: selectedClass,
+                    initialValue: selectedClass,
                     hint: const Text("Select Class"),
                     onChanged: (value) => setState(() => selectedClass = value),
                     items: [

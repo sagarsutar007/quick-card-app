@@ -17,7 +17,6 @@ class SchoolListScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Schools'),
-          leading: const BackButton(),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(50),
             child: Padding(

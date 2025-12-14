@@ -20,12 +20,18 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: ThemeData(
-        fontFamily: 'LeagueSpartan',
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
+        fontFamily: 'MonaSans',
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(fontWeight: FontWeight.w400),
+          bodyMedium: TextStyle(fontWeight: FontWeight.w400),
+          titleMedium: TextStyle(fontWeight: FontWeight.w600),
+          titleLarge: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFF3D3D)),
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.deepOrange,
-          foregroundColor: Colors.white,
+          backgroundColor: const Color(0xFFFFF1EE),
+          foregroundColor: const Color(0xFF000000),
           elevation: 4,
         ),
       ),
